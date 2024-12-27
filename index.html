@@ -1,0 +1,146 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Firebase Realtime Data Visualization</title>
+  <!-- Firebase JS SDK -->
+  <script src="https://www.gstatic.com/firebasejs/8.10.1/firebase-app.js"></script>
+  <script src="https://www.gstatic.com/firebasejs/8.10.1/firebase-database.js"></script>
+  <!-- Raphael.js (Required for JustGage) -->
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/raphael/2.3.0/raphael.min.js"></script>
+  <!-- JustGage -->
+  <script src="https://cdn.jsdelivr.net/npm/justgage@1.4.2/justgage.min.js"></script>
+  <style>
+    body {
+      font-family: Arial, sans-serif;
+      text-align: center;
+      padding: 20px;
+    }
+    .container {
+      display: flex;
+      flex-wrap: wrap;
+      justify-content: center;
+      gap: 20px;
+    }
+    .gauge {
+      width: 250px;
+      height: 200px;
+    }
+    h1 {
+      margin-bottom: 40px;
+    }
+    #output {
+      margin-top: 30px;
+    }
+  </style>
+</head>
+<body>
+  <h1>Firebase Realtime Data Visualization</h1>
+  <div class="container">
+    <!-- Gauges -->
+    <div class="gauge">
+      <div id="pulseGauge"></div>
+      <h3>Pulse</h3>
+    </div>
+    <div class="gauge">
+      <div id="infraredGauge"></div>
+      <h3>Infrared</h3>
+    </div>
+    <div class="gauge">
+      <div id="suhuGauge"></div>
+      <h3>Suhu (°C)</h3>
+    </div>
+    <div class="gauge">
+      <div id="kelembabanGauge"></div>
+      <h3>Kelembaban (%)</h3>
+    </div>
+  </div>
+
+  <div id="output">
+    <p>Loading data...</p>
+  </div>
+
+  <script>
+    // Firebase configuration
+    const firebaseConfig = {
+      apiKey: "AIzaSyCYgUVhYnZmTntYUb7X1ZKPbBicsUtAhZM",
+      authDomain: "wemosfirebase-35831.firebaseapp.com",
+      databaseURL: "https://wemosfirebase-35831-default-rtdb.firebaseio.com",
+      projectId: "wemosfirebase-35831",
+      storageBucket: "wemosfirebase-35831.appspot.com",
+      messagingSenderId: "68697476856",
+      appId: "1:68697476856:web:5bddcf3f71fe32095f750d",
+      measurementId: "G-LQEV3DQ6W7"
+    };
+
+    // Initialize Firebase
+    const app = firebase.initializeApp(firebaseConfig);
+    const database = firebase.database(app);
+
+    // Reference the database path
+    const iotRef = database.ref('IOT');
+
+    // Initialize Gauges
+    const pulseGauge = new JustGage({
+      id: "pulseGauge",
+      value: 0,
+      min: 0,
+      max: 200,
+      title: "Pulse"
+    });
+
+    const infraredGauge = new JustGage({
+      id: "infraredGauge",
+      value: 0,
+      min: 0,
+      max: 1024,
+      title: "Infrared"
+    });
+
+    const suhuGauge = new JustGage({
+      id: "suhuGauge",
+      value: 0,
+      min: 0,
+      max: 50,
+      title: "Suhu (°C)"
+    });
+
+    const kelembabanGauge = new JustGage({
+      id: "kelembabanGauge",
+      value: 0,
+      min: 0,
+      max: 100,
+      title: "Kelembaban (%)"
+    });
+
+    // Listen for changes in the database
+    iotRef.on('value', (snapshot) => {
+      const data = snapshot.val();
+      const output = document.getElementById('output');
+
+      if (data) {
+        // Update gauges
+        pulseGauge.refresh(data.Pulse || 0);
+        infraredGauge.refresh(data.Infrared || 0);
+        suhuGauge.refresh(data.Suhu || 0);
+        kelembabanGauge.refresh(data.Kelembaban || 0);
+
+        // Update output
+        output.innerHTML = `
+          <h2>Data Retrieved:</h2>
+          <p><strong>Pulse:</strong> ${data.Pulse || "N/A"}</p>
+          <p><strong>Infrared:</strong> ${data.Infrared || "N/A"}</p>
+          <p><strong>Suhu:</strong> ${data.Suhu || "N/A"}</p>
+          <p><strong>Kelembaban:</strong> ${data.Kelembaban || "N/A"}</p>
+        `;
+      } else {
+        output.innerHTML = "<p>No data found in the database.</p>";
+      }
+    }, (error) => {
+      console.error("Error fetching data:", error);
+      document.getElementById('output').innerHTML = `<p>Error fetching data: ${error.message}</p>`;
+    });
+  </script>
+</body>
+</html>
